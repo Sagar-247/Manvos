@@ -1,0 +1,75 @@
+//DHT-11 (or DHT-22 you can use) temperature sensor
+//Integrated with LCD
+
+#include "DHT.h"
+#define DHTPIN 13// you can use 
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);//you can also use pins 3, 4, 5, 12, 13 or 14
+   // Pin 15 can work but DHT must be disconnected during program upload
+#include <Wire.h>
+#include <hd44780.h>                       // main hd44780 header
+#include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
+
+hd44780_I2Cexp lcd; // declare lcd object: auto locate & config exapander chip
+
+// LCD geometry
+const int LCD_COLS = 20;
+const int LCD_ROWS = 4;
+void setup() {
+ dht.begin();// initialize the sensor
+ lcd.backlight();// turn on lcd backlight
+ lcd.init();// initialize lcd
+ Serial.begin(9600);
+ Serial.println(F("DHTxx test!"));
+
+ dht.begin();
+ 
+}
+void loop() {
+ lcd.clear();
+ //delay(2000);
+   lcd.setCursor(0,0);// set the cursor on the first row and column
+   lcd.print("Humidity= ");
+   lcd.print((int)dht.readHumidity());//print the humidity
+   lcd.print("%");
+   float h = dht.readHumidity();
+  // Read temperature as Celsius (the default)
+   lcd.setCursor(0,1);//set the cursor on the second row and first column
+   lcd.print("Temp= ");
+   lcd.print((int)dht.readTemperature());//print the temperature
+   lcd.print("%Celsius");
+   float t = dht.readTemperature();
+  // Read temperature as Fahrenheit (isFahrenheit = true)
+  float f = dht.readTemperature(true);
+  lcd.setCursor(20,3);//set the cursor on the 3rd row and first column
+  lcd.print("Required=");
+
+  delay(2000);
+
+    if (isnan(h) || isnan(t) || isnan(f)) {
+    Serial.println(F("Failed to read from DHT sensor!"));
+    return;
+  }
+//  lcd.clear();
+// Compute heat index in Fahrenheit (the default)
+  float hif = dht.computeHeatIndex(f, h);
+  // Compute heat index in Celsius (isFahreheit = false)
+  float hic = dht.computeHeatIndex(t, h, false);
+
+   
+   delay(2000);
+  
+  Serial.print(F("Humidity: "));
+  Serial.print(h);
+  Serial.print(F("%  Temperature: "));
+  Serial.print(t);
+  Serial.print(F("°C "));
+  Serial.print(f);
+  Serial.print(F("°F  Heat index: "));
+  Serial.print(hic);
+  Serial.print(F("°C "));
+  Serial.print(hif);
+  Serial.println(F("°F"));
+  
+   
+}
